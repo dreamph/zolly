@@ -1,4 +1,4 @@
-package zolly
+package main
 
 import (
 	"github.com/goccy/go-yaml"
