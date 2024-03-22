@@ -10,7 +10,7 @@ Zolly Api gateway
 Install
 =======
 ``` sh
-go install github.com/dreamph/zolly@latest
+go install github.com/dreamph/zolly/cmd/zolly@latest
 ```
 
 
