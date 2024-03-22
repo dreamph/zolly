@@ -1,0 +1,9 @@
+server:
+  port: 3000
+services:
+  - path: "/orders"
+    stripPath: true
+    timeout: 60
+    servers:
+      - "http://localhost:3001"
+      - "http://localhost:3002"
