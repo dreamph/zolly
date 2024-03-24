@@ -15,46 +15,80 @@ const (
 )
 
 type Config struct {
-	Servers         []string
-	OnRequest       fiber.Handler
-	OnResponse      fiber.Handler
-	Timeout         time.Duration
-	ReadBufferSize  int
-	WriteBufferSize int
-	TlsConfig       *tls.Config
-	Client          *fasthttp.LBClient
-	Path            string
-	SkipPath        bool
+	Servers    []string
+	OnRequest  fiber.Handler
+	OnResponse fiber.Handler
+	Timeout    time.Duration
+	//ReadBufferSize  int
+	//WriteBufferSize int
+	TlsConfig *tls.Config
+	Client    *fasthttp.LBClient
+	Path      string
+	StripPath bool
 }
 
-var ConfigDefault = Config{
-	OnRequest:  nil,
-	OnResponse: nil,
-	Timeout:    time.Second * 10,
-}
-
-func configDefault(config ...Config) Config {
-	if len(config) < 1 {
-		return ConfigDefault
+func configDefault(config Config) Config {
+	if config.Timeout <= 0 {
+		config.Timeout = time.Second * 10
 	}
 
-	cfg := config[0]
-
-	if cfg.Timeout <= 0 {
-		cfg.Timeout = ConfigDefault.Timeout
-	}
-
-	if len(cfg.Servers) == 0 && cfg.Client == nil {
+	if len(config.Servers) == 0 && config.Client == nil {
 		panic("Servers cannot be empty")
 	}
-	return cfg
+	return config
 }
 
 func NewBalancer(config Config) (fiber.Handler, error) {
 	cfg := configDefault(config)
 
+	lbClient, err := intiLBClient(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	return func(c *fiber.Ctx) error {
+		return handleRequest(c, cfg, lbClient)
+	}, nil
+}
+
+func handleRequest(c *fiber.Ctx, cfg Config, lbClient *fasthttp.LBClient) error {
+	req := c.Request()
+	resp := c.Response()
+
+	// Don't proxy "Connection" header
+	req.Header.Del(fiber.HeaderConnection)
+
+	if cfg.OnRequest != nil {
+		if err := cfg.OnRequest(c); err != nil {
+			return err
+		}
+	}
+
+	if cfg.StripPath {
+		req.SetRequestURI(strings.Replace(utils.UnsafeString(req.RequestURI()), cfg.Path, Slash, 1))
+	} else {
+		req.SetRequestURI(utils.UnsafeString(req.RequestURI()))
+	}
+
+	err := lbClient.Do(req, resp)
+	if err != nil {
+		return err
+	}
+
+	resp.Header.Del(fiber.HeaderConnection)
+
+	if cfg.OnResponse != nil {
+		if err := cfg.OnResponse(c); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func intiLBClient(cfg Config) (*fasthttp.LBClient, error) {
 	lbClient := &fasthttp.LBClient{}
-	if config.Client == nil {
+	if cfg.Client == nil {
 		lbClient.Timeout = cfg.Timeout
 		for _, server := range cfg.Servers {
 			if !strings.HasPrefix(server, "http") {
@@ -70,49 +104,12 @@ func NewBalancer(config Config) (fiber.Handler, error) {
 				NoDefaultUserAgentHeader: true,
 				DisablePathNormalizing:   true,
 				Addr:                     u.Host,
-
-				ReadBufferSize:  config.ReadBufferSize,
-				WriteBufferSize: config.WriteBufferSize,
-
-				TLSConfig: config.TlsConfig,
+				TLSConfig:                cfg.TlsConfig,
 			})
 		}
 	} else {
-		lbClient = config.Client
+		lbClient = cfg.Client
 	}
 
-	return func(c *fiber.Ctx) error {
-		req := c.Request()
-		resp := c.Response()
-
-		// Don't proxy "Connection" header
-		req.Header.Del(fiber.HeaderConnection)
-
-		if cfg.OnRequest != nil {
-			if err := cfg.OnRequest(c); err != nil {
-				return err
-			}
-		}
-
-		if config.SkipPath {
-			req.SetRequestURI(strings.ReplaceAll(utils.UnsafeString(req.RequestURI()), config.Path, Slash))
-		} else {
-			req.SetRequestURI(utils.UnsafeString(req.RequestURI()))
-		}
-
-		err := lbClient.Do(req, resp)
-		if err != nil {
-			return err
-		}
-
-		resp.Header.Del(fiber.HeaderConnection)
-
-		if cfg.OnResponse != nil {
-			if err := cfg.OnResponse(c); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}, nil
+	return lbClient, nil
 }

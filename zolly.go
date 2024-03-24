@@ -10,14 +10,16 @@ import (
 
 func Start(config *GatewayConfig) error {
 	app := fiber.New(fiber.Config{
+		BodyLimit:             -1,
 		DisableStartupMessage: true,
 	})
-	for _, s := range config.Services {
+
+	for _, configService := range config.Services {
 		balancerHandler, err := NewBalancer(Config{
-			Path:     s.Path,
-			SkipPath: s.StripPath,
-			Timeout:  time.Duration(s.Timeout) * time.Second,
-			Servers:  s.Servers,
+			Path:      configService.Path,
+			StripPath: configService.StripPath,
+			Timeout:   time.Duration(configService.Timeout) * time.Second,
+			Servers:   configService.Servers,
 			TlsConfig: &tls.Config{
 				InsecureSkipVerify: true,
 			},
@@ -26,7 +28,7 @@ func Start(config *GatewayConfig) error {
 			return err
 		}
 
-		app.Group(s.Path, balancerHandler)
+		app.Group(configService.Path, balancerHandler)
 	}
 
 	out := colorable.NewColorableStdout()
