@@ -1,5 +1,4 @@
 # zolly
-[![GoDoc](https://godoc.org/github.com/imroc/req?status.svg)](https://godoc.org/github.com/imroc/req)
 
 Zolly Api gateway
 - High Performance
