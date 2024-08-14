@@ -12,6 +12,7 @@ import (
 
 const (
 	Slash = "/"
+	Empty = ""
 )
 
 type Config struct {
@@ -65,7 +66,7 @@ func handleRequest(c *fiber.Ctx, cfg Config, lbClient *fasthttp.LBClient) error 
 	}
 
 	if cfg.StripPath {
-		req.SetRequestURI(strings.Replace(utils.UnsafeString(req.RequestURI()), cfg.Path, Slash, 1))
+		req.SetRequestURI(strings.Replace(utils.UnsafeString(req.RequestURI()), cfg.Path, Empty, 1))
 	} else {
 		req.SetRequestURI(utils.UnsafeString(req.RequestURI()))
 	}
