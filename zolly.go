@@ -33,6 +33,7 @@ func Start(config *GatewayConfig) error {
 
 	out := colorable.NewColorableStdout()
 	mainLogo := logo
+	mainLogo += fmt.Sprintf("Version : %s\n", CurrentVersion)
 	mainLogo += fmt.Sprintf("Server : http://127.0.0.1:%s", config.Server.Port)
 	_, _ = fmt.Fprintln(out, mainLogo)
 
