@@ -7,6 +7,8 @@ import (
 
 func main() {
 	configFile := flag.String("c", "config.yml", "config file")
+	flag.Parse()
+
 	config, err := LoadConfig(*configFile)
 	if err != nil {
 		log.Fatalln(err)
