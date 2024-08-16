@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/mattn/go-colorable"
 	"time"
 )
@@ -13,6 +14,8 @@ func Start(config *GatewayConfig) error {
 		BodyLimit:             -1,
 		DisableStartupMessage: true,
 	})
+
+	app.Use(cors.New())
 
 	for _, configService := range config.Services {
 		balancerHandler, err := NewBalancer(Config{
