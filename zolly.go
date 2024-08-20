@@ -1,8 +1,12 @@
 package main
 
 import (
+	"crypto"
 	"crypto/tls"
 	"fmt"
+	"os"
+	gopkcs12 "software.sslmate.com/src/go-pkcs12"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/mattn/go-colorable"
@@ -31,7 +35,7 @@ func Start(config *GatewayConfig) error {
 			return err
 		}
 
-		app.Group(configService.Path, balancerHandler)
+		app.All(configService.Path+"/*", balancerHandler)
 	}
 
 	welcomeInfo(config)
@@ -63,14 +67,34 @@ func Start(config *GatewayConfig) error {
 	return nil
 }
 
+func initTLSConfig(path string, password string) (*tls.Certificate, error) {
+	pkcs12Data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	key, cert, err := gopkcs12.Decode(pkcs12Data, password)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsCert := tls.Certificate{
+		Certificate: [][]byte{cert.Raw},
+		PrivateKey:  key.(crypto.PrivateKey),
+		Leaf:        cert,
+	}
+
+	return &tlsCert, nil
+}
+
 func welcomeInfo(config *GatewayConfig) {
 	out := colorable.NewColorableStdout()
 	mainLogo := logo
 	mainLogo += fmt.Sprintf("Version : %s\n", CurrentVersion)
 	if config.Server.SSL != nil && config.Server.SSL.Enable {
-		mainLogo += fmt.Sprintf("Server : https://127.0.0.1:%s", config.Server.Port)
+		mainLogo += fmt.Sprintf("Server : https://localhost:%s", config.Server.Port)
 	} else {
-		mainLogo += fmt.Sprintf("Server : http://127.0.0.1:%s", config.Server.Port)
+		mainLogo += fmt.Sprintf("Server : http://localhost:%s", config.Server.Port)
 	}
 	_, _ = fmt.Fprintln(out, mainLogo)
 }

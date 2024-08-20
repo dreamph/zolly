@@ -14,6 +14,11 @@ func main() {
 		return c.SendString("Hello, World 👋!")
 	})
 
+	app.Get("/test", func(c *fiber.Ctx) error {
+		// Send a string response to the client
+		return c.SendString("Hello, Test")
+	})
+
 	// Start the server on port 3001
 	app.Listen(":3001")
 }

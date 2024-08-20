@@ -30,21 +30,15 @@ type ServiceConfig struct {
 	StripPath bool     `yaml:"stripPath"`
 }
 
-func ReadFile(filePath string) ([]byte, error) {
-	return os.ReadFile(filePath)
-}
-
-func LoadConfig(filePath string) (*GatewayConfig, error) {
-	ymlData, err := ReadFile(filePath)
+func LoadConfig(filename string) (*GatewayConfig, error) {
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-
-	cfg := &GatewayConfig{}
-	err = yaml.Unmarshal(ymlData, cfg)
+	var config GatewayConfig
+	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		return nil, err
 	}
-
-	return cfg, nil
+	return &config, nil
 }

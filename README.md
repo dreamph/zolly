@@ -50,15 +50,16 @@ Transfer/sec:     18.83MB
 Load Test with Zolly API Gateway
 =======
 ``` sh
-wrk -t12 -c100 -d60s http://127.0.0.1:3000/orders
+wrk -t12 -c100 -d60s http://127.0.0.1:3000/orders  
 Running 1m test @ http://127.0.0.1:3000/orders
   12 threads and 100 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     1.80ms    3.11ms  82.80ms   95.45%
-    Req/Sec     6.01k     0.94k   12.34k    64.68%
-  4315660 requests in 1.00m, 555.62MB read
-Requests/sec:  71805.77
-Transfer/sec:      9.24MB
+    Latency     6.27ms   21.91ms 384.45ms   93.90%
+    Req/Sec     8.16k     4.82k  107.65k    87.96%
+  5801723 requests in 1.00m, 746.95MB read
+  Socket errors: connect 0, read 0, write 0, timeout 1
+Requests/sec:  96542.32
+Transfer/sec:     12.43MB
 ```
 
 Buy Me a Coffee
