@@ -11,7 +11,16 @@ type GatewayConfig struct {
 }
 
 type Server struct {
-	Port string `yaml:"port"`
+	Port string     `yaml:"port"`
+	SSL  *SSLConfig `yaml:"ssl"`
+}
+
+type SSLConfig struct {
+	Enable  bool   `yaml:"enable"`
+	KeyType string `yaml:"keyType"`
+
+	P12KeyFile     string `yaml:"p12KeyFile"`
+	P12KeyPassword string `yaml:"p12KeyPassword"`
 }
 
 type ServiceConfig struct {

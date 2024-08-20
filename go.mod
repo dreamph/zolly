@@ -5,7 +5,9 @@ go 1.22
 require (
 	github.com/goccy/go-yaml v1.11.3
 	github.com/gofiber/fiber/v2 v2.52.2
+	github.com/mattn/go-colorable v0.1.13
 	github.com/valyala/fasthttp v1.52.0
+	software.sslmate.com/src/go-pkcs12 v0.4.0
 )
 
 require (
@@ -13,12 +15,12 @@ require (
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 )

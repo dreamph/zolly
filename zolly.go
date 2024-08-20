@@ -34,16 +34,43 @@ func Start(config *GatewayConfig) error {
 		app.Group(configService.Path, balancerHandler)
 	}
 
-	out := colorable.NewColorableStdout()
-	mainLogo := logo
-	mainLogo += fmt.Sprintf("Version : %s\n", CurrentVersion)
-	mainLogo += fmt.Sprintf("Server : http://127.0.0.1:%s", config.Server.Port)
-	_, _ = fmt.Fprintln(out, mainLogo)
+	welcomeInfo(config)
 
-	err := app.Listen(":" + config.Server.Port)
-	if err != nil {
-		return err
+	if config.Server.SSL != nil && config.Server.SSL.Enable {
+		tlsCert, err := initTLSConfig(config.Server.SSL.P12KeyFile, config.Server.SSL.P12KeyPassword)
+		if err != nil {
+			return err
+		}
+		ln, err := tls.Listen("tcp", ":"+config.Server.Port,
+			&tls.Config{
+				Certificates: []tls.Certificate{*tlsCert},
+			},
+		)
+		if err != nil {
+			return err
+		}
+		err = app.Listener(ln)
+		if err != nil {
+			return err
+		}
+	} else {
+		err := app.Listen(":" + config.Server.Port)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func welcomeInfo(config *GatewayConfig) {
+	out := colorable.NewColorableStdout()
+	mainLogo := logo
+	mainLogo += fmt.Sprintf("Version : %s\n", CurrentVersion)
+	if config.Server.SSL != nil && config.Server.SSL.Enable {
+		mainLogo += fmt.Sprintf("Server : https://127.0.0.1:%s", config.Server.Port)
+	} else {
+		mainLogo += fmt.Sprintf("Server : http://127.0.0.1:%s", config.Server.Port)
+	}
+	_, _ = fmt.Fprintln(out, mainLogo)
 }

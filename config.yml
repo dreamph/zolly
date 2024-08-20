@@ -1,5 +1,10 @@
 server:
   port: 3000
+  ssl:
+    enable: false
+    keyType: "PKCS12"
+    p12KeyFile: "./certs/server.p12"
+    p12KeyPassword: "password"
 services:
   - path: "/orders"
     stripPath: true
