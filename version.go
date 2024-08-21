@@ -1,3 +1,3 @@
 package main
 
-const CurrentVersion = "v2.0.1"
+const CurrentVersion = "v2.0.2"

@@ -11,10 +11,10 @@ type GatewayConfig struct {
 }
 
 type Server struct {
-	Port string     `yaml:"port"`
-	SSL  *SSLConfig `yaml:"ssl"`
-	Log  *LogConfig `yaml:"log"`
-	Cors *LogConfig `yaml:"cors"`
+	Port string      `yaml:"port"`
+	SSL  *SSLConfig  `yaml:"ssl"`
+	Log  *LogConfig  `yaml:"log"`
+	Cors *CorsConfig `yaml:"cors"`
 }
 
 type SSLConfig struct {
