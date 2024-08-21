@@ -4,6 +4,7 @@ Zolly Api gateway
 - High Performance
 - Light weight
 - Simple & Easy
+- Auto SSL with auto generate key
 
 
 Install
@@ -13,11 +14,41 @@ go install github.com/dreamph/zolly@latest
 ```
 
 
-Configuration
+Configuration (Basic)
 =======
 ``` yml
 server:
   port: 3000
+  cors:
+    enable: true
+  log:
+    enable: false
+services:
+  - path: "/orders"
+    stripPath: true
+    timeout: 60
+    servers:
+      - "http://127.0.0.1:3001"
+      - "http://127.0.0.1:3002"
+```
+
+Configuration (Auto SSL)
+=======
+``` yml
+server:
+  port: 3000
+  cors:
+    enable: true
+  log:
+    enable: false
+  ssl:
+    enable: true
+    generateKey:
+      enable: true
+      keyConfig:
+        commonName: "localhost"
+        file: "./certs/server.p12"
+        password: "password"
 services:
   - path: "/orders"
     stripPath: true

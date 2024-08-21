@@ -13,14 +13,38 @@ type GatewayConfig struct {
 type Server struct {
 	Port string     `yaml:"port"`
 	SSL  *SSLConfig `yaml:"ssl"`
+	Log  *LogConfig `yaml:"log"`
+	Cors *LogConfig `yaml:"cors"`
 }
 
 type SSLConfig struct {
-	Enable  bool   `yaml:"enable"`
-	KeyType string `yaml:"keyType"`
+	Enable      bool               `yaml:"enable"`
+	GenerateKey *GenerateKeyConfig `yaml:"generateKey"`
+	Key         *KeyConfig         `yaml:"key"`
+}
 
-	P12KeyFile     string `yaml:"p12KeyFile"`
-	P12KeyPassword string `yaml:"p12KeyPassword"`
+type GenerateKeyConfig struct {
+	Enable    bool                   `yaml:"enable"`
+	KeyConfig *GenerateKeyConfigInfo `yaml:"keyConfig"`
+}
+
+type GenerateKeyConfigInfo struct {
+	CommonName string `yaml:"commonName"`
+	File       string `yaml:"file"`
+	Password   string `yaml:"password"`
+}
+
+type KeyConfig struct {
+	File     string `yaml:"file"`
+	Password string `yaml:"password"`
+}
+
+type LogConfig struct {
+	Enable bool `yaml:"enable"`
+}
+
+type CorsConfig struct {
+	Enable bool `yaml:"enable"`
 }
 
 type ServiceConfig struct {

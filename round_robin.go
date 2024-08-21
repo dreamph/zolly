@@ -3,15 +3,15 @@ package main
 import "sync"
 
 type RoundRobin struct {
-	sync.Mutex
+	locker sync.Mutex
 
 	Current int
 	Pool    []string
 }
 
 func (r *RoundRobin) Get() string {
-	r.Lock()
-	defer r.Unlock()
+	r.locker.Lock()
+	defer r.locker.Unlock()
 
 	if r.Current >= len(r.Pool) {
 		r.Current %= len(r.Pool)

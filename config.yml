@@ -1,5 +1,17 @@
 server:
   port: 3000
+  cors:
+    enable: true
+  log:
+    enable: false
+  ssl:
+    enable: false
+    generateKey:
+      enable: true
+      keyConfig:
+        commonName: "localhost"
+        file: "./certs/server.p12"
+        password: "password"
 services:
   - path: "/orders"
     stripPath: true
