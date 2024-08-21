@@ -64,33 +64,47 @@ Start Server
 zolly -c config.yml
 ```
 
-Load Test Direct to Backend
-=======
-``` sh
-wrk -t12 -c100 -d60s http://127.0.0.1:3001
-Running 1m test @ http://127.0.0.1:3001
+### LoadTest without API Gateway
+
+```shell
+wrk -t12 -c100 -d60s http://127.0.0.1:8000/v1/hello
+Running 1m test @ http://127.0.0.1:8000/v1/hello
   12 threads and 100 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency   644.53us  567.74us  42.95ms   95.24%
-    Req/Sec    12.25k     1.25k   20.55k    75.78%
-  8776698 requests in 1.00m, 1.10GB read
-Requests/sec: 146270.41
-Transfer/sec:     18.83MB
+    Latency     1.06ms    5.16ms 229.90ms   98.87%
+    Req/Sec    11.76k     2.72k   68.56k    92.35%
+  8423482 requests in 1.00m, 1.03GB read
+Requests/sec: 140187.71
+Transfer/sec:     17.51MB
 ```
 
-Load Test with Zolly API Gateway
-=======
-``` sh
-wrk -t12 -c100 -d60s http://127.0.0.1:3000/orders  
-Running 1m test @ http://127.0.0.1:3000/orders
+### LoadTest Zolly API Gateway
+
+```shell
+wrk -t12 -c100 -d60s http://127.0.0.1:8070/v1/hello
+Running 1m test @ http://127.0.0.1:8070/v1/hello
   12 threads and 100 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency     6.27ms   21.91ms 384.45ms   93.90%
-    Req/Sec     8.16k     4.82k  107.65k    87.96%
-  5801723 requests in 1.00m, 746.95MB read
+    Latency     4.63ms   16.56ms 376.43ms   95.09%
+    Req/Sec     6.40k     2.90k   34.92k    82.16%
+  4579541 requests in 1.00m, 572.13MB read
   Socket errors: connect 0, read 0, write 0, timeout 1
-Requests/sec:  96542.32
-Transfer/sec:     12.43MB
+Requests/sec:  76203.34
+Transfer/sec:      9.52MB
+```
+
+### LoadTest KrakenD API Gateway
+
+```shell
+wrk -t12 -c100 -d60s http://127.0.0.1:8090/v1/hello
+Running 1m test @ http://127.0.0.1:8090/v1/hello
+  12 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     2.02ms    2.01ms  70.55ms   94.56%
+    Req/Sec     4.47k   416.06     6.27k    70.93%
+  3200251 requests in 1.00m, 717.22MB read
+Requests/sec:  53322.81
+Transfer/sec:     11.95MB
 ```
 
 Buy Me a Coffee
