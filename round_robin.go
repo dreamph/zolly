@@ -10,6 +10,10 @@ type RoundRobin struct {
 }
 
 func (r *RoundRobin) Get() string {
+	if len(r.Pool) == 1 {
+		return r.Pool[0]
+	}
+
 	r.locker.Lock()
 	defer r.locker.Unlock()
 

@@ -18,4 +18,8 @@ services:
     timeout: 60
     servers:
       - "http://localhost:3001"
+  - path: "/products"
+    stripPath: true
+    timeout: 60
+    servers:
       - "http://localhost:3002"

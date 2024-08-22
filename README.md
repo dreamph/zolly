@@ -28,8 +28,12 @@ services:
     stripPath: true
     timeout: 60
     servers:
-      - "http://127.0.0.1:3001"
-      - "http://127.0.0.1:3002"
+      - "http://localhost:3001"
+  - path: "/products"
+    stripPath: true
+    timeout: 60
+    servers:
+      - "http://localhost:3002"
 ```
 
 Configuration (Auto SSL)
@@ -54,8 +58,12 @@ services:
     stripPath: true
     timeout: 60
     servers:
-      - "http://127.0.0.1:3001"
-      - "http://127.0.0.1:3002"
+      - "http://localhost:3001"
+  - path: "/products"
+    stripPath: true
+    timeout: 60
+    servers:
+      - "http://localhost:3002"
 ```
 
 Start Server
@@ -63,6 +71,13 @@ Start Server
 ``` sh
 zolly -c config.yml
 ```
+
+### Benchmark
+- MacBook Pro 2023
+- Chip Apple M2 Max
+- Memory 64 GB
+
+[Benchmark Source](https://github.com/dreamph/zolly-bench)
 
 ### LoadTest without API Gateway
 
