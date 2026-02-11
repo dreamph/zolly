@@ -4,10 +4,14 @@ import (
 	"crypto"
 	"crypto/tls"
 	"fmt"
+	"log"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/dreamph/zolly/key"
+	zollyplugin "github.com/dreamph/zolly/plugin"
 	"github.com/dreamph/zolly/utils"
 	"github.com/fatih/color"
 	"github.com/gofiber/fiber/v2"
@@ -17,6 +21,20 @@ import (
 )
 
 func Start(config *GatewayConfig) error {
+	// Initialize plugin manager
+	var pluginMgr *zollyplugin.Manager
+	if len(config.Plugins) > 0 {
+		pluginMgr = zollyplugin.NewManager()
+		defer pluginMgr.Shutdown()
+
+		for _, pd := range config.Plugins {
+			err := pluginMgr.LoadPlugin(pd.Name, pd.Path, pd.Settings)
+			if err != nil {
+				return fmt.Errorf("failed to load plugin %q: %w", pd.Name, err)
+			}
+		}
+	}
+
 	app := fiber.New(fiber.Config{
 		BodyLimit:             config.Server.BodyLimit,
 		DisableStartupMessage: true,
@@ -44,10 +62,40 @@ func Start(config *GatewayConfig) error {
 			return err
 		}
 
-		app.Group(configService.Path, balancerHandler)
+		if pluginMgr != nil && len(configService.Plugins) > 0 {
+			middlewares, err := zollyplugin.NewFiberMiddlewareChain(
+				pluginMgr,
+				configService.Plugins,
+				time.Duration(configService.Timeout)*time.Second,
+			)
+			if err != nil {
+				return fmt.Errorf("failed to create plugin chain for service %q: %w", configService.Path, err)
+			}
+
+			handlers := make([]fiber.Handler, 0, len(middlewares)+1)
+			handlers = append(handlers, middlewares...)
+			handlers = append(handlers, balancerHandler)
+			app.Group(configService.Path, handlers...)
+		} else {
+			app.Group(configService.Path, balancerHandler)
+		}
 	}
 
 	welcomeInfo(config)
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-quit
+		log.Println("Shutting down gateway...")
+		if pluginMgr != nil {
+			pluginMgr.Shutdown()
+		}
+		if err := app.Shutdown(); err != nil {
+			log.Printf("Server shutdown error: %v\n", err)
+		}
+	}()
 
 	if config.Server.SSL != nil && config.Server.SSL.Enable {
 		keyBytes, password, err := initKey(config)
@@ -93,31 +141,30 @@ func initKey(config *GatewayConfig) ([]byte, string, error) {
 		return keyData, config.Server.SSL.Key.Password, nil
 	}
 
-	if !utils.FileExists(config.Server.SSL.GenerateKey.KeyConfig.File) {
-		keyResponse, err := key.CreateKey(&key.CreateKeyRequest{
-			Bits:       key.DefaultKeySize,
-			CommonName: config.Server.SSL.GenerateKey.KeyConfig.CommonName,
-			Password:   config.Server.SSL.GenerateKey.KeyConfig.Password,
-			ExpireDate: time.Now().AddDate(1, 0, 0),
-		})
-		if err != nil {
-			return nil, "", err
-		}
-
-		err = utils.WriteFile(config.Server.SSL.GenerateKey.KeyConfig.File, keyResponse.KeyBytes)
-		if err != nil {
-			return nil, "", err
-		}
-
-		return keyResponse.KeyBytes, config.Server.SSL.GenerateKey.KeyConfig.Password, nil
-	} else {
+	if utils.FileExists(config.Server.SSL.GenerateKey.KeyConfig.File) {
 		keyData, err := os.ReadFile(config.Server.SSL.GenerateKey.KeyConfig.File)
 		if err != nil {
 			return nil, "", err
 		}
-
 		return keyData, config.Server.SSL.GenerateKey.KeyConfig.Password, nil
 	}
+
+	keyResponse, err := key.CreateKey(&key.CreateKeyRequest{
+		Bits:       key.DefaultKeySize,
+		CommonName: config.Server.SSL.GenerateKey.KeyConfig.CommonName,
+		Password:   config.Server.SSL.GenerateKey.KeyConfig.Password,
+		ExpireDate: time.Now().AddDate(1, 0, 0),
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	err = utils.WriteFile(config.Server.SSL.GenerateKey.KeyConfig.File, keyResponse.KeyBytes)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return keyResponse.KeyBytes, config.Server.SSL.GenerateKey.KeyConfig.Password, nil
 }
 
 func initTLSConfig(pkcs12Data []byte, password string) (*tls.Certificate, error) {

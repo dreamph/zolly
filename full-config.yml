@@ -16,14 +16,26 @@ server:
     key: # for generateKey: enable: false
       file: "./certs/manual-key.p12"
       password: "password"
+
+plugins:
+  - name: "auth"
+    path: "./plugins/auth-plugin"
+    settings:
+      api_key: "my-secret-key"
+      header_name: "X-API-Key"
+
 services:
   - path: "/orders"
     stripPath: true
     timeout: 60
+    plugins:
+      - "auth"
     servers:
       - "http://localhost:3001"
   - path: "/products"
     stripPath: true
     timeout: 60
+    plugins:
+      - "auth"
     servers:
       - "http://localhost:3002"

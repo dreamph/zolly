@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package zolly.plugin;
+
+option go_package = "github.com/dreamph/zolly/plugin/proto";
+
+service MiddlewarePlugin {
+  rpc HandleRequest(HttpRequest) returns (HttpResponse);
+  rpc Configure(PluginConfig) returns (ConfigureResponse);
+  rpc HealthCheck(Empty) returns (HealthCheckResponse);
+}
+
+message HttpRequest {
+  string method = 1;
+  string path = 2;
+  string original_url = 3;
+  map<string, string> headers = 4;
+  bytes body = 5;
+  map<string, string> query_params = 6;
+  string client_ip = 7;
+}
+
+message HttpResponse {
+  string action = 1;
+  int32 status_code = 2;
+  map<string, string> headers = 3;
+  bytes body = 4;
+}
+
+message PluginConfig {
+  map<string, string> settings = 1;
+}
+
+message ConfigureResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+message Empty {}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string message = 2;
+}

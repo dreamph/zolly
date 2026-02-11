@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -28,7 +27,6 @@ func FileExists(name string) bool {
 }
 
 func WriteFile(filePath string, data []byte) error {
-	fmt.Println(filepath.Dir(filePath))
 	if _, err := os.Stat(filepath.Dir(filePath)); os.IsNotExist(err) {
 		err := os.MkdirAll(filepath.Dir(filePath), 0700)
 		if err != nil {

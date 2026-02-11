@@ -7,8 +7,15 @@ import (
 )
 
 type GatewayConfig struct {
-	Server   Server          `yaml:"server"`
-	Services []ServiceConfig `yaml:"services"`
+	Server   Server             `yaml:"server"`
+	Plugins  []PluginDefinition `yaml:"plugins"`
+	Services []ServiceConfig    `yaml:"services"`
+}
+
+type PluginDefinition struct {
+	Name     string            `yaml:"name"`
+	Path     string            `yaml:"path"`
+	Settings map[string]string `yaml:"settings"`
 }
 
 type Server struct {
@@ -54,6 +61,7 @@ type ServiceConfig struct {
 	Timeout   int      `yaml:"timeout"`
 	Servers   []string `yaml:"servers"`
 	StripPath bool     `yaml:"stripPath"`
+	Plugins   []string `yaml:"plugins"`
 }
 
 func LoadConfig(filename string) (*GatewayConfig, error) {

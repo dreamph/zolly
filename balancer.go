@@ -2,16 +2,15 @@ package main
 
 import (
 	"crypto/tls"
+	"strings"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/proxy"
 	"github.com/valyala/fasthttp"
-	"strings"
-	"time"
 )
 
-const (
-	Empty = ""
-)
+const defaultTimeout = 10 * time.Second
 
 type Config struct {
 	Servers   []string
@@ -22,21 +21,10 @@ type Config struct {
 }
 
 func NewBalancer(config Config) (fiber.Handler, error) {
-	//maxIdleConnDuration := time.Hour * 1
-	//tcpDialer := fasthttp.TCPDialer{
-	//	Concurrency:      4096,
-	//	DNSCacheDuration: time.Hour,
-	//}
 	client := &fasthttp.Client{
-		ReadTimeout:  time.Duration(10) * time.Second,
-		WriteTimeout: time.Duration(10) * time.Second,
+		ReadTimeout:  defaultTimeout,
+		WriteTimeout: defaultTimeout,
 		TLSConfig:    config.TlsConfig,
-
-		//MaxIdleConnDuration:           maxIdleConnDuration,
-		//NoDefaultUserAgentHeader:      true, // Don't send: User-Agent: fasthttp
-		//DisableHeaderNamesNormalizing: true, // If you set the case on your headers correctly you can enable this
-		//DisablePathNormalizing:        true,
-		//Dial:                          tcpDialer.Dial,
 	}
 
 	if config.Timeout > 0 {
@@ -45,15 +33,14 @@ func NewBalancer(config Config) (fiber.Handler, error) {
 	}
 
 	roundRobin := &RoundRobin{
-		Current: 0,
-		Pool:    config.Servers,
+		Pool: config.Servers,
 	}
 
 	return func(c *fiber.Ctx) error {
 		backend := roundRobin.Get()
 		targetURL := backend + c.OriginalURL()
 		if config.StripPath {
-			targetURL = backend + strings.Replace(c.OriginalURL(), config.Path, Empty, 1)
+			targetURL = backend + strings.Replace(c.OriginalURL(), config.Path, "", 1)
 		}
 
 		return proxy.Do(c, targetURL, client)

@@ -1,10 +1,11 @@
 # zolly
 
-Zolly Api gateway
+Zolly API Gateway
 - High Performance
-- Light weight
+- Lightweight
 - Simple & Easy
 - Auto SSL with auto generate key
+- gRPC Plugin System (HashiCorp go-plugin)
 
 
 Install
@@ -19,6 +20,7 @@ Configuration (Basic)
 ``` yml
 server:
   port: 3000
+  bodyLimit: 100
   cors:
     enable: true
   log:
@@ -41,6 +43,7 @@ Configuration (Auto SSL)
 ``` yml
 server:
   port: 3000
+  bodyLimit: 100
   cors:
     enable: true
   log:
@@ -66,10 +69,129 @@ services:
       - "http://localhost:3002"
 ```
 
+Configuration (With Plugins)
+=======
+``` yml
+server:
+  port: 3000
+  cors:
+    enable: true
+  log:
+    enable: false
+
+plugins:
+  - name: "auth"
+    path: "./plugins/auth-plugin"
+    settings:
+      api_key: "my-secret-key"
+      header_name: "X-API-Key"
+
+services:
+  - path: "/orders"
+    stripPath: true
+    timeout: 60
+    plugins:
+      - "auth"
+    servers:
+      - "http://localhost:3001"
+  - path: "/products"
+    stripPath: true
+    timeout: 60
+    plugins:
+      - "auth"
+      - "hmac"
+    servers:
+      - "http://localhost:3002"
+```
+
 Start Server
 =======
 ``` sh
 zolly -c config.yml
+```
+
+Plugins
+=======
+
+Zolly supports middleware plugins via [HashiCorp go-plugin](https://github.com/hashicorp/go-plugin) (gRPC). Each plugin is a separate Go binary that communicates with the gateway over gRPC.
+
+### How It Works
+
+```
+Client Request
+  -> Plugin 1 (gRPC)
+    -> Plugin 2 (gRPC)
+      -> Proxy to backend
+  -> Response
+```
+
+- Plugins are defined in `config.yml` with a name, binary path, and settings
+- Each service can specify which plugins to apply (in order)
+- Plugins can **continue** (pass request to next handler) or **abort** (return response immediately, e.g. 401)
+
+### Writing a Plugin
+
+``` go
+package main
+
+import (
+	"context"
+
+	zollyplugin "github.com/dreamph/zolly/plugin"
+)
+
+type MyPlugin struct{}
+
+func (p *MyPlugin) Configure(_ context.Context, settings *zollyplugin.PluginSettings) (*zollyplugin.ConfigureResult, error) {
+	// Read settings and initialize plugin
+	return &zollyplugin.ConfigureResult{Success: true}, nil
+}
+
+func (p *MyPlugin) HandleRequest(_ context.Context, req *zollyplugin.Request) (*zollyplugin.Response, error) {
+	// Inspect request and decide: continue or abort
+	return &zollyplugin.Response{Action: zollyplugin.ActionContinue}, nil
+}
+
+func (p *MyPlugin) HealthCheck(_ context.Context) (*zollyplugin.HealthCheckResult, error) {
+	return &zollyplugin.HealthCheckResult{Healthy: true, Message: "ok"}, nil
+}
+
+func main() {
+	zollyplugin.Serve(&MyPlugin{})
+}
+```
+
+### Plugin Interface
+
+| Method | Description |
+|---|---|
+| `Configure` | Called once at startup with settings from config |
+| `HandleRequest` | Called for every request. Return `ActionContinue` or `ActionAbort` |
+| `HealthCheck` | Called periodically to verify plugin health |
+
+### Request / Response
+
+**Request** fields: `Method`, `Path`, `OriginalURL`, `Headers`, `Body`, `QueryParams`, `ClientIP`
+
+**Response** fields:
+- `Action` - `"continue"` (pass to next handler) or `"abort"` (return response)
+- `StatusCode` - HTTP status code (used when abort)
+- `Headers` - Response headers (abort) or modified request headers (continue)
+- `Body` - Response body (abort) or modified request body (continue)
+
+### Example Plugins
+
+| Plugin | Description |
+|---|---|
+| [auth](examples/plugins/auth) | API key authentication via header |
+| [hmac](examples/plugins/hmac) | HMAC-SHA256 signature validation |
+
+### Build Plugins
+
+``` sh
+make build-plugin-auth    # Build auth plugin
+make build-plugin-hmac    # Build hmac plugin
+make build-plugins        # Build all plugins
 ```
 
 ### Benchmark
