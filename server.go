@@ -18,7 +18,7 @@ import (
 
 func Start(config *GatewayConfig) error {
 	app := fiber.New(fiber.Config{
-		BodyLimit:             -1,
+		BodyLimit:             config.Server.BodyLimit,
 		DisableStartupMessage: true,
 	})
 

@@ -1,5 +1,6 @@
 server:
   port: 3000
+  bodyLimit: 100
   cors:
     enable: true
   log:

@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/goccy/go-yaml"
 	"os"
+
+	"github.com/goccy/go-yaml"
 )
 
 type GatewayConfig struct {
@@ -11,10 +12,11 @@ type GatewayConfig struct {
 }
 
 type Server struct {
-	Port string      `yaml:"port"`
-	SSL  *SSLConfig  `yaml:"ssl"`
-	Log  *LogConfig  `yaml:"log"`
-	Cors *CorsConfig `yaml:"cors"`
+	Port      string      `yaml:"port"`
+	BodyLimit int         `yaml:"bodyLimit"`
+	SSL       *SSLConfig  `yaml:"ssl"`
+	Log       *LogConfig  `yaml:"log"`
+	Cors      *CorsConfig `yaml:"cors"`
 }
 
 type SSLConfig struct {
