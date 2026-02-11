@@ -1,4 +1,4 @@
-module github.com/dreamph/zolly
+module github.com/dreamph/zolly/v2
 
 go 1.24.0
 
@@ -17,6 +17,7 @@ require (
 require (
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.6.0 // indirect
+	github.com/dreamph/zolly v0.0.0-20260211080220-78bb4a5fc150
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
